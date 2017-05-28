@@ -131,10 +131,12 @@
                 let cursor = list.selectionStart
                 let prevChar = text[cursor - 1]
                 
-                while (prevChar !== '[' && prevChar !== ']') {
+                while (prevChar && prevChar !== '[' && prevChar !== ']') {
                     cursor--
                     prevChar = text[cursor - 1]
                 }
+
+                if (cursor <= 0) return
 
                 // whether click was within []
                 if (text[cursor - 1] === '[') {
