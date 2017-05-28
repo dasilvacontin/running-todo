@@ -1,0 +1,171 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+
+            color: #333333;
+            font-size: 14px;
+            line-height: 1.6em;
+            font-family: monospace;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 20px;
+        }
+
+        h1 {
+            font-size: inherit;
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: auto;
+            border: none;
+            font: inherit;
+            overflow: hidden;
+            resize: none;
+        }
+        textarea:focus {
+            outline: none;
+        }
+
+        quote {
+            display: block;
+            font: inherit;
+            padding: 5px 14px;
+            color: #a0c9ff;
+            border-left: 3px solid currentColor;
+            max-width: 400px;
+        }
+        
+        a {
+            color: #ff7fb3;
+        }
+    </style>
+</head>
+<body>
+    <h1># TO-DO (<span id="finished-tasks">0</span>/<span id="total-tasks">0</span>)</h1>
+    <textarea id="todo-list" spellcheck="false"></textarea>
+    <quote>Write list items in markdown. e.g:<br>
+        - [ ] reply daniel<br>
+        - [x] finish todo-list app<br>
+        - [ ] send mockup<br>
+        <br>
+        "Running In The 90s - Sytricka Vaporwave remix" gets faster the closer you get to your goal.<br>
+        <br>
+        made by <a target="_blank" href="https://twitter.com/dasilvacontin">@dasilvacontin</a>
+    </quote>
+    <audio id="eurobeat" src="running.mp3" autoplay loop></audio>
+    <script>
+        const list = document.getElementById('todo-list')
+        const finishedText = document.getElementById('finished-tasks')
+        const totalText = document.getElementById('total-tasks')
+        const eurobeat = document.getElementById('eurobeat')
+
+        let finishedTasks = 0
+        let totalTasks = 0
+        let preferredDoneSymbol = 'x'
+
+        function updateListHeight () {
+            list.style.height = '1px'
+            list.style.height = `${23 + list.scrollHeight}px`
+            list.scrollTop = 0
+        }
+
+        function updateState () {
+            finishedTasks = 0
+            totalTasks = 0
+            
+            list.value.split('\n').forEach(line => {
+                const match = line.match(/^- \[(.*)?\] .*$/)
+                if (match) {
+                    let [, taskState] = match
+                    if (taskState) taskState = taskState.trim()
+                    if (taskState && taskState.length > 0) {
+                        finishedTasks++
+                        preferredDoneSymbol = taskState
+                    }
+                    totalTasks++
+                }
+            })
+
+
+        }
+
+        function updateTitle () {
+            finishedText.innerHTML = finishedTasks
+            totalText.innerHTML = totalTasks
+        }
+
+        function updateSongSpeed () {
+            // avoid division by 0
+            const percentage = totalTasks ? finishedTasks / totalTasks : 0
+            eurobeat.playbackRate = 1 + (percentage * .6)
+        }
+
+        function saveState () {
+            localStorage.setItem('todoList', list.value)
+        }
+        
+        function update () {
+            updateListHeight()
+            updateState()
+            updateTitle()
+            updateSongSpeed()
+            saveState()
+        }
+
+        function clickedList () {
+            const text = list.value
+
+            if (list.selectionStart === list.selectionEnd) {
+                let cursor = list.selectionStart
+                let prevChar = text[cursor - 1]
+                
+                while (prevChar !== '[' && prevChar !== ']') {
+                    cursor--
+                    prevChar = text[cursor - 1]
+                }
+
+                // whether click was within []
+                if (text[cursor - 1] === '[') {
+                    if (text[cursor] === ']') {
+                        list.value = text.substr(0, cursor) +
+                                     preferredDoneSymbol +
+                                     text.substr(cursor)
+                    } else if (text[cursor] === ' ') {
+                        const before = text.substr(0, cursor)
+                        const after = text.substr(text.indexOf(']', cursor))
+                        list.value = before + preferredDoneSymbol + after
+                    } else if (text[cursor] !== ']') {
+                        const before = text.substr(0, cursor)
+                        const after = text.substr(text.indexOf(']', cursor))
+                        list.value = before + ' ' + after
+                    }
+                }
+            }
+
+            update()
+        }
+
+        function init () {
+            list.value = (localStorage.getItem('todoList') || '')
+            list.focus()
+            list.addEventListener('keyup', update)
+            list.addEventListener('mouseup', clickedList)
+            update()
+        }
+        init()
+
+    </script>
+</body>
+</html>
