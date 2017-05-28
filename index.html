@@ -108,7 +108,7 @@
 
         function updateSongSpeed () {
             // avoid division by 0
-            const percentage = totalTasks ? finishedTasks / totalTasks : 0
+            const percentage = (finishedTasks / Math.max(5, totalTasks))
             eurobeat.playbackRate = 1 + (percentage * .6)
         }
 
